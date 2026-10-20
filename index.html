@@ -21,20 +21,19 @@
   <main class="container">
     <!-- SECCIÓN 1: ARMADOR DE PC PASO A PASO -->
     <section id="tab-armador" class="tab-content active">
-      <h1>Armador de PC Inteligente</h1>
-      <p class="subtitle">Elegí tus componentes paso a paso. El sistema validará la compatibilidad automáticamente.</p>
+      <h1>Armador de PC Profesional</h1>
+      <p class="subtitle">Diseñá tu equipo paso a paso. Nuestro sistema valida sockets, memorias y energía en tiempo real.</p>
       
       <div class="step-container">
         <label for="selectPlataforma">1. Elegí la plataforma principal:</label>
         <select id="selectPlataforma">
-          <option value="">-- Seleccioná --</option>
+          <option value="">-- Seleccioná plataforma --</option>
           <option value="amd">AMD</option>
           <option value="intel">INTEL</option>
         </select>
       </div>
 
       <div id="pasosHardware" class="disabled-section">
-        <!-- Los siguientes selects se cargarán dinámicamente según la plataforma -->
         <div class="step-container">
           <label for="selectCpu">2. Procesador (CPU):</label>
           <select id="selectCpu" disabled></select>
@@ -49,25 +48,43 @@
           <label for="selectRam">4. Memoria RAM:</label>
           <select id="selectRam" disabled></select>
         </div>
+
+        <div class="step-container">
+          <label for="selectGpu">5. Placa de Video (GPU):</label>
+          <select id="selectGpu" disabled></select>
+        </div>
+
+        <div class="step-container">
+          <label for="selectFuente">6. Fuente de Alimentación:</label>
+          <select id="selectFuente" disabled></select>
+        </div>
+
+        <div class="step-container">
+          <label for="selectGabinete">7. Gabinete:</label>
+          <select id="selectGabinete" disabled></select>
+        </div>
       </div>
+
+      <!-- Vista previa visual con imágenes de los componentes elegidos -->
+      <div id="previewContainer" class="preview-grid"></div>
 
       <!-- Alerta de compatibilidad en vivo -->
       <div id="alertaCompatibilidad" class="alert-box"></div>
 
-      <button id="btnGuardarArmado" class="btn-primary" disabled>Guardar mi PC</button>
+      <button id="btnGuardarArmado" class="btn-primary" disabled>Guardar mi Configuración</button>
       <p id="mensaje"></p>
     </section>
 
     <!-- SECCIÓN 2: ASISTENTE TU PC -->
     <section id="tab-asistente" class="tab-content">
-      <h1>Asistente Personalizado Tu PC</h1>
-      <p class="subtitle">Próximamente: Respondé unas preguntas y te armamos la PC ideal.</p>
+      <h1>Asistente Inteligente Tu PC</h1>
+      <p class="subtitle">Próximamente: Motor de recomendación guiado por propósito y presupuesto.</p>
     </section>
 
     <!-- SECCIÓN 3: PERIFÉRICOS -->
     <section id="tab-perifericos" class="tab-content">
-      <h1>Tus Periféricos Ideal</h1>
-      <p class="subtitle">Próximamente: Selección orientativa de mouses, teclados y monitores.</p>
+      <h1>Selección de Periféricos</h1>
+      <p class="subtitle">Próximamente: Periféricos adaptados para oficina y gaming Xtreme.</p>
     </section>
   </main>
 
