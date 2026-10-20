@@ -1,6 +1,6 @@
 import { clienteSupabase } from './conexion.js';
 
-// Manejo de Pestañas (Tabs)
+// --- NAVEGACIÓN ENTRE TABS ---
 const navBtns = document.querySelectorAll('.nav-btn');
 const tabContents = document.querySelectorAll('.tab-content');
 
@@ -8,14 +8,12 @@ navBtns.forEach(btn => {
   btn.addEventListener('click', () => {
     navBtns.forEach(b => b.classList.remove('active'));
     tabContents.forEach(tc => tc.classList.remove('active'));
-    
     btn.classList.add('active');
-    const targetTab = document.getElementById(`tab-${btn.dataset.tab}`);
-    targetTab.classList.add('active');
+    document.getElementById(`tab-${btn.dataset.tab}`).classList.add('active');
   });
 });
 
-// Elementos del Armador
+// --- 1. ARMADOR DE PC ---
 const selectPlataforma = document.getElementById('selectPlataforma');
 const pasosHardware = document.getElementById('pasosHardware');
 const selectCpu = document.getElementById('selectCpu');
@@ -27,269 +25,236 @@ const selectGabinete = document.getElementById('selectGabinete');
 const previewContainer = document.getElementById('previewContainer');
 const alertaCompatibilidad = document.getElementById('alertaCompatibilidad');
 const btnGuardarArmado = document.getElementById('btnGuardarArmado');
-const mensaje = document.getElementById('mensaje');
+const mensajeArmador = document.getElementById('mensajeArmador');
 
-// Estado del armado actual
-let armadoActual = {
-  plataforma: '',
-  cpu: null,
-  mother: null,
-  ram: null,
-  gpu: null,
-  fuente: null,
-  gabinete: null
-};
+let armadoActual = { plataforma: '', cpu: null, mother: null, ram: null, gpu: null, fuente: null, gabinete: null };
 
-// 1. Cambio de Plataforma (AMD / INTEL)
 selectPlataforma.addEventListener('change', async (e) => {
   const plataforma = e.target.value;
   armadoActual.plataforma = plataforma;
-  
-  resetearArmadoDesde('cpu');
-
+  resetearArmador();
   if (plataforma) {
     pasosHardware.classList.add('enabled');
     selectCpu.disabled = false;
     alertaCompatibilidad.className = "alert-box success";
-    alertaCompatibilidad.textContent = `Plataforma ${plataforma.toUpperCase()} seleccionada. Elegí tu procesador.`;
-    await cargarComponentes('cpu', plataforma, selectCpu);
+    alertaCompatibilidad.textContent = `Plataforma ${plataforma.toUpperCase()} activa. Elegí procesador.`;
+    await cargarSelectSupabase('cpu', plataforma, selectCpu);
   } else {
     pasosHardware.classList.remove('enabled');
-    deshabilitarSelectsDesde('cpu');
     alertaCompatibilidad.style.display = 'none';
   }
   actualizarPreview();
-  validarTodo();
+  validarArmado();
 });
 
-// 2. Selección de CPU
 selectCpu.addEventListener('change', async (e) => {
-  const id = e.target.value;
-  if (id) {
-    const { data } = await clienteSupabase.from('componentes').select('*').eq('id', id).single();
-    armadoActual.cpu = data;
-    selectMother.disabled = false;
-    await cargarComponentes('mother', armadoActual.plataforma, selectMother);
-  } else {
-    armadoActual.cpu = null;
-    deshabilitarSelectsDesde('mother');
-  }
-  actualizarPreview();
-  validarTodo();
+  armadoActual.cpu = await obtenerObjetoSeleccionado(e.target.value);
+  if (armadoActual.cpu) { selectMother.disabled = false; await cargarSelectSupabase('mother', armadoActual.plataforma, selectMother); }
+  else { deshabilitarDesde('mother'); }
+  actualizarPreview(); validarArmado();
 });
 
-// 3. Selección de Motherboard
 selectMother.addEventListener('change', async (e) => {
-  const id = e.target.value;
-  if (id) {
-    const { data } = await clienteSupabase.from('componentes').select('*').eq('id', id).single();
-    armadoActual.mother = data;
-    selectRam.disabled = false;
-    await cargarComponentes('ram', armadoActual.plataforma, selectRam);
-  } else {
-    armadoActual.mother = null;
-    deshabilitarSelectsDesde('ram');
+  armadoActual.mother = await obtenerObjetoSeleccionado(e.target.value);
+  if (armadoActual.mother) { 
+    selectRam.disabled = false; 
+    // CORRECCIÓN: Cargamos las RAMs de manera general (filtrando luego por DDR4/DDR5 si se desea)
+    await cargarSelectGeneral('ram', selectRam); 
   }
-  actualizarPreview();
-  validarTodo();
+  else { deshabilitarDesde('ram'); }
+  actualizarPreview(); validarArmado();
 });
 
-// 4. Selección de RAM
 selectRam.addEventListener('change', async (e) => {
-  const id = e.target.value;
-  if (id) {
-    const { data } = await clienteSupabase.from('componentes').select('*').eq('id', id).single();
-    armadoActual.ram = data;
-    selectGpu.disabled = false;
-    await cargarComponentesGenerales('gpu', selectGpu);
-  } else {
-    armadoActual.ram = null;
-    deshabilitarSelectsDesde('gpu');
-  }
-  actualizarPreview();
-  validarTodo();
+  armadoActual.ram = await obtenerObjetoSeleccionado(e.target.value);
+  if (armadoActual.ram) { selectGpu.disabled = false; await cargarSelectGeneral('gpu', selectGpu); }
+  else { deshabilitarDesde('gpu'); }
+  actualizarPreview(); validarArmado();
 });
 
-// 5. Selección de GPU
 selectGpu.addEventListener('change', async (e) => {
-  const id = e.target.value;
-  if (id) {
-    const { data } = await clienteSupabase.from('componentes').select('*').eq('id', id).single();
-    armadoActual.gpu = data;
-    selectFuente.disabled = false;
-    await cargarComponentesGenerales('fuente', selectFuente);
-  } else {
-    armadoActual.gpu = null;
-    deshabilitarSelectsDesde('fuente');
-  }
-  actualizarPreview();
-  validarTodo();
+  armadoActual.gpu = await obtenerObjetoSeleccionado(e.target.value);
+  if (armadoActual.gpu) { selectFuente.disabled = false; await cargarSelectGeneral('fuente', selectFuente); }
+  else { deshabilitarDesde('fuente'); }
+  actualizarPreview(); validarArmado();
 });
 
-// 6. Selección de Fuente
 selectFuente.addEventListener('change', async (e) => {
-  const id = e.target.value;
-  if (id) {
-    const { data } = await clienteSupabase.from('componentes').select('*').eq('id', id).single();
-    armadoActual.fuente = data;
-    selectGabinete.disabled = false;
-    await cargarComponentesGenerales('gabinete', selectGabinete);
-  } else {
-    armadoActual.fuente = null;
-    deshabilitarSelectsDesde('gabinete');
-  }
-  actualizarPreview();
-  validarTodo();
+  armadoActual.fuente = await obtenerObjetoSeleccionado(e.target.value);
+  if (armadoActual.fuente) { selectGabinete.disabled = false; await cargarSelectGeneral('gabinete', selectGabinete); }
+  else { deshabilitarDesde('gabinete'); }
+  actualizarPreview(); validarArmado();
 });
 
-// 7. Selección de Gabinete
 selectGabinete.addEventListener('change', async (e) => {
-  const id = e.target.value;
-  if (id) {
-    const { data } = await clienteSupabase.from('componentes').select('*').eq('id', id).single();
-    armadoActual.gabinete = data;
-  } else {
-    armadoActual.gabinete = null;
-  }
-  actualizarPreview();
-  validarTodo();
+  armadoActual.gabinete = await obtenerObjetoSeleccionado(e.target.value);
+  actualizarPreview(); validarArmado();
 });
 
-// Funciones auxiliares de carga desde Supabase
-async function cargarComponentes(tipo, marca, elementoSelect) {
-  try {
-    const { data } = await clienteSupabase.from('componentes').select('*').eq('tipo', tipo).eq('marca', marca);
-    elementoSelect.innerHTML = '<option value="">-- Seleccioná una opción --</option>';
-    data.forEach(item => {
-      const opt = document.createElement('option');
-      opt.value = item.id;
-      opt.textContent = `${item.nombre} (Socket: ${item.socket || 'N/A'}, Tipo: ${item.memoria_tipo || 'N/A'})`;
-      elementoSelect.appendChild(opt);
-    });
-  } catch (err) {
-    console.error("Error cargando componentes:", err);
-  }
+async function cargarSelectSupabase(tipo, marca, selectElem) {
+  const { data } = await clienteSupabase.from('componentes').select('*').eq('tipo', tipo).eq('marca', marca);
+  selectElem.innerHTML = '<option value="">-- Seleccioná --</option>';
+  data?.forEach(i => selectElem.innerHTML += `<option value="${i.id}">${i.nombre} (Socket: ${i.socket || 'N/A'}, Tipo: ${i.memoria_tipo || 'N/A'})</option>`);
 }
 
-async function cargarComponentesGenerales(tipo, elementoSelect) {
-  try {
-    const { data } = await clienteSupabase.from('componentes').select('*').eq('tipo', tipo);
-    elementoSelect.innerHTML = '<option value="">-- Seleccioná una opción --</option>';
-    data.forEach(item => {
-      const opt = document.createElement('option');
-      opt.value = item.id;
-      opt.textContent = `${item.nombre} (${tipo === 'fuente' ? item.wataje + 'W' : item.gama})`;
-      elementoSelect.appendChild(opt);
-    });
-  } catch (err) {
-    console.error("Error cargando generales:", err);
-  }
+async function cargarSelectGeneral(tipo, selectElem) {
+  const { data } = await clienteSupabase.from('componentes').select('*').eq('tipo', tipo);
+  selectElem.innerHTML = '<option value="">-- Seleccioná --</option>';
+  data?.forEach(i => {
+    let extra = '';
+    if (tipo === 'fuente') extra = `${i.wataje}W`;
+    else if (tipo === 'ram') extra = `${i.memoria_tipo} - ${i.gama}`;
+    else extra = i.gama;
+    selectElem.innerHTML += `<option value="${i.id}">${i.nombre} (${extra})</option>`;
+  });
 }
 
-function resetearArmadoDesde() {
+async function obtenerObjetoSeleccionado(id) {
+  if (!id) return null;
+  const { data } = await clienteSupabase.from('componentes').select('*').eq('id', id).single();
+  return data;
+}
+
+function resetearArmador() {
   armadoActual.cpu = null; selectCpu.innerHTML = ''; selectCpu.disabled = true;
-  deshabilitarSelectsDesde('mother');
+  deshabilitarDesde('mother');
 }
 
-function deshabilitarSelectsDesde(nivel) {
-  if (nivel === 'mother' || nivel === 'cpu') {
-    armadoActual.mother = null; selectMother.innerHTML = ''; selectMother.disabled = true;
-  }
-  if (nivel === 'mother' || nivel === 'cpu' || nivel === 'ram') {
-    armadoActual.ram = null; selectRam.innerHTML = ''; selectRam.disabled = true;
-  }
-  if (nivel !== 'gabinete' && nivel !== 'fuente' && nivel !== 'gpu') {
-    armadoActual.gpu = null; selectGpu.innerHTML = ''; selectGpu.disabled = true;
-    armadoActual.fuente = null; selectFuente.innerHTML = ''; selectFuente.disabled = true;
-    armadoActual.gabinete = null; selectGabinete.innerHTML = ''; selectGabinete.disabled = true;
-  }
+function deshabilitarDesde(nivel) {
+  if (['mother', 'cpu'].includes(nivel)) { armadoActual.mother = null; selectMother.innerHTML = ''; selectMother.disabled = true; }
+  if (['mother', 'cpu', 'ram'].includes(nivel)) { armadoActual.ram = null; selectRam.innerHTML = ''; selectRam.disabled = true; }
+  armadoActual.gpu = null; selectGpu.innerHTML = ''; selectGpu.disabled = true;
+  armadoActual.fuente = null; selectFuente.innerHTML = ''; selectFuente.disabled = true;
+  armadoActual.gabinete = null; selectGabinete.innerHTML = ''; selectGabinete.disabled = true;
 }
 
-// Renderizado visual de la PC armada con imágenes
 function actualizarPreview() {
   previewContainer.innerHTML = '';
-  const keys = ['cpu', 'mother', 'ram', 'gpu', 'fuente', 'gabinete'];
-  
-  keys.forEach(k => {
+  ['cpu', 'mother', 'ram', 'gpu', 'fuente', 'gabinete'].forEach(k => {
     if (armadoActual[k]) {
       const item = armadoActual[k];
-      const card = document.createElement('div');
-      card.className = 'preview-card';
-      card.innerHTML = `
-        <img src="${item.imagen_url || 'https://images.unsplash.com/photo-1587202372775-e229f172b9d7?w=300'}" alt="${item.nombre}">
-        <p>${item.nombre}</p>
-        <span>${k}</span>
-      `;
-      previewContainer.appendChild(card);
+      previewContainer.innerHTML += `
+        <div class="preview-card">
+          <img src="${item.imagen_url}" alt="${item.nombre}">
+          <p>${item.nombre}</p>
+          <span>${k.toUpperCase()}</span>
+        </div>`;
     }
   });
 }
 
-// Validador en vivo de Sockets, Memorias y Watts
-function validarTodo() {
+function validarArmado() {
   let errores = [];
-
-  if (armadoActual.cpu && armadoActual.mother) {
-    if (armadoActual.cpu.socket !== armadoActual.mother.socket) {
-      errores.push(`⚠️ Socket Incompatible: CPU (${armadoActual.cpu.socket}) no coincide con Motherboard (${armadoActual.mother.socket}).`);
-    }
+  if (armadoActual.cpu && armadoActual.mother && armadoActual.cpu.socket !== armadoActual.mother.socket) {
+    errores.push(`⚠️ Socket Incompatible: CPU (${armadoActual.cpu.socket}) no coincide con Mother (${armadoActual.mother.socket}).`);
   }
-
-  if (armadoActual.mother && armadoActual.ram) {
-    if (armadoActual.mother.memoria_tipo !== armadoActual.ram.memoria_tipo) {
-      errores.push(`⚠️ Memoria Incompatible: Motherboard soporta ${armadoActual.mother.memoria_tipo} y elegiste RAM ${armadoActual.ram.memoria_tipo}.`);
-    }
+  if (armadoActual.mother && armadoActual.ram && armadoActual.mother.memoria_tipo !== armadoActual.ram.memoria_tipo) {
+    errores.push(`⚠️ Memoria Incompatible: Mother soporta ${armadoActual.mother.memoria_tipo} y elegiste RAM ${armadoActual.ram.memoria_tipo}.`);
   }
-
   if (armadoActual.fuente && (armadoActual.cpu || armadoActual.gpu)) {
-    let consumoTotal = (armadoActual.cpu ? armadoActual.cpu.wataje : 0) + 
-                       (armadoActual.gpu ? armadoActual.gpu.wataje : 0) + 50; 
-    if (armadoActual.fuente.wataje < consumoTotal) {
-      errores.push(`⚠️ Energía Insuficiente: Tu equipo consume aprox. ${consumoTotal}W y la fuente es de ${armadoActual.fuente.wataje}W.`);
+    let consumo = (armadoActual.cpu?.wataje || 0) + (armadoActual.gpu?.wataje || 0) + 50;
+    if (armadoActual.fuente.wataje < consumo) {
+      errores.push(`⚠️ Energía Insuficiente: El sistema consume ~${consumo}W y la fuente otorga ${armadoActual.fuente.wataje}W.`);
     }
   }
 
-  const completo = armadoActual.cpu && armadoActual.mother && armadoActual.ram && armadoActual.gpu && armadoActual.fuente && armadoActual.gabinete;
-
+  const completo = Object.values(armadoActual).every(v => v !== null && v !== '');
   if (errores.length > 0) {
     alertaCompatibilidad.className = "alert-box error";
     alertaCompatibilidad.innerHTML = errores.join('<br>');
     btnGuardarArmado.disabled = true;
   } else if (completo) {
     alertaCompatibilidad.className = "alert-box success";
-    alertaCompatibilidad.textContent = "¡Configuración perfecta! Todos los componentes son compatibles y la fuente cubre el consumo.";
+    alertaCompatibilidad.textContent = "¡Configuración 100% compatible y optimizada!";
     btnGuardarArmado.disabled = false;
   } else {
     alertaCompatibilidad.className = "alert-box success";
-    alertaCompatibilidad.textContent = "Armado en curso. Seleccioná todos los componentes para habilitar el guardado.";
+    alertaCompatibilidad.textContent = "Armado en curso...";
     alertaCompatibilidad.style.display = 'block';
     btnGuardarArmado.disabled = true;
   }
 }
 
-// Guardar armado en Supabase
 btnGuardarArmado.addEventListener('click', async () => {
   btnGuardarArmado.disabled = true;
-  mensaje.style.color = "#38bdf8";
-  mensaje.textContent = "Guardando tu configuración...";
-
+  mensajeArmador.style.color = "#38bdf8";
+  mensajeArmador.textContent = "Guardando en Supabase...";
   try {
-    const detalle = `PC Armada -> CPU: ${armadoActual.cpu.nombre} | Mother: ${armadoActual.mother.nombre} | RAM: ${armadoActual.ram.nombre} | GPU: ${armadoActual.gpu.nombre} | Fuente: ${armadoActual.fuente.nombre} | Gabinete: ${armadoActual.gabinete.nombre}`;
-    
-    const { data, error } = await clienteSupabase
-      .from('registros')
-      .insert([{ origen: detalle }])
-      .select();
-
-    if (error) throw error;
-
-    mensaje.style.color = "#4ade80";
-    mensaje.textContent = "¡PC guardada con éxito en Supabase!";
-    console.log("Guardado:", data);
-  } catch (error) {
-    mensaje.style.color = "#f87171";
-    mensaje.textContent = `Error: ${error.message}`;
+    const detalle = `Build -> CPU: ${armadoActual.cpu.nombre} | Mother: ${armadoActual.mother.nombre} | RAM: ${armadoActual.ram.nombre} | GPU: ${armadoActual.gpu.nombre} | Fuente: ${armadoActual.fuente.nombre} | Gabinete: ${armadoActual.gabinete.nombre}`;
+    await clienteSupabase.from('registros').insert([{ origen: detalle }]);
+    mensajeArmador.style.color = "#4ade80";
+    mensajeArmador.textContent = "¡PC guardada con éxito!";
+  } catch (err) {
+    mensajeArmador.style.color = "#f87171";
+    mensajeArmador.textContent = `Error: ${err.message}`;
   } finally {
     btnGuardarArmado.disabled = false;
+  }
+});
+
+// --- 2. ASISTENTE TU PC ---
+const asistenteProposito = document.getElementById('asistenteProposito');
+const asistenteGama = document.getElementById('asistenteGama');
+const btnGenerarAsistente = document.getElementById('btnGenerarAsistente');
+const resultadoAsistente = document.getElementById('resultadoAsistente');
+const detalleAsistente = document.getElementById('detalleAsistente');
+
+btnGenerarAsistente.addEventListener('click', () => {
+  const proposito = asistenteProposito.value;
+  const gama = asistenteGama.value;
+  resultadoAsistente.style.display = 'block';
+  
+  let recomendacion = "";
+  if (proposito === 'oficina') {
+    recomendacion = `<p><b>Perfil:</b> Oficina / Productividad</p><p><b>Sugerencia:</b> Procesador con gráficos integrados (Intel Core i3 o Ryzen 5 5600G), 16GB de RAM DDR4, SSD NVMe rápido y fuente certificada de 500W.</p><p><b>Argumento:</b> Solución económica, de bajo consumo energético, ideal para multitarea de oficina, paquetería Office y navegación fluida.</p>`;
+  } else if (proposito === 'gaming') {
+    recomendacion = `<p><b>Perfil:</b> Gaming Gama ${gama}</p><p><b>Sugerencia:</b> Procesador Ryzen 5 o Core i5, Placa de Video dedicada RTX 3060 / RX 7800 XT, 16GB/32GB RAM y fuente de 650W+</p><p><b>Argumento:</b> Diseñado para correr títulos actuales en 1080p o 1440p con altas tasas de refresco estables y excelente relación precio-rendimiento.</p>`;
+  } else {
+    recomendacion = `<p><b>Perfil:</b> Creador de Contenido / Render Xtreme</p><p><b>Sugerencia:</b> Procesador multinúcleo de alta gama (Ryzen 7 7800X3D o Core i7), 32GB/64GB DDR5 y GPU RTX 4070 / 4090.</p><p><b>Argumento:</b> Máxima potencia para renderizado 3D, edición en 4K y streaming simultáneo sin pérdida de cuadros.</p>`;
+  }
+  detalleAsistente.innerHTML = recomendacion;
+});
+
+// --- 3. PERIFÉRICOS ---
+const perifericoPerfil = document.getElementById('perifericoPerfil');
+const panelXtreme = document.getElementById('panelXtreme');
+const btnSugerirPerifericos = document.getElementById('btnSugerirPerifericos');
+const resultadoPerifericos = document.getElementById('resultadoPerifericos');
+const detallePerifericos = document.getElementById('detallePerifericos');
+const xtremeJuego = document.getElementById('xtremeJuego');
+const xtremeDpi = document.getElementById('xtremeDpi');
+
+perifericoPerfil.addEventListener('change', (e) => {
+  if (e.target.value === 'xtreme') {
+    panelXtreme.style.display = 'block';
+    resultadoPerifericos.className = "resultado-box font-xtreme";
+  } else {
+    panelXtreme.style.display = 'none';
+    resultadoPerifericos.className = "resultado-box font-oficina";
+  }
+});
+
+btnSugerirPerifericos.addEventListener('click', () => {
+  const perfil = perifericoPerfil.value;
+  resultadoPerifericos.style.display = 'block';
+
+  if (perfil === 'oficina') {
+    detallePerifericos.innerHTML = `
+      <p><b>Teclado:</b> Logitech K120 Ergo (Silencioso, recorrido cómodo).</p>
+      <p><b>Mouse:</b> Logitech B100 (Diseño ambidextro y precisión estandar).</p>
+      <p><b>Monitor:</b> Samsung 24" IPS 75Hz (Cuidado visual, sin parpadeo para largas jornadas laborales).</p>
+      <p><b>Argumento:</b> Enfoque en ergonomía, durabilidad y reducción de fatiga visual durante largas horas de trabajo de oficina.</p>
+    `;
+  } else {
+    const juego = xtremeJuego.value || "competitivo de alta velocidad";
+    const dpi = xtremeDpi.value;
+    detallePerifericos.innerHTML = `
+      <p><b>Juego Principal:</b> ${juego.toUpperCase()}</p>
+      <p><b>Configuración DPI Óptima:</b> ${dpi} DPI (Calibrado para control milimétrico en ${juego}).</p>
+      <p><b>Teclado Recomendado:</b> Razer Huntsman V3 Pro (Switches ópticos analógicos de respuesta instantánea).</p>
+      <p><b>Mouse Recomendado:</b> Logitech G Pro X Superlight 2 (Ultraliviano, 0 delay).</p>
+      <p><b>Monitor Recomendado:</b> Alienware 360Hz OLED (Taza de refresco extrema para eliminar ghosting).</p>
+      <p><b>Justificación Xtreme:</b> Configuración orientada a esports profesionales, priorizando latencia ultra baja, switches ópticos y precisión absoluta de DPI.</p>
+    `;
   }
 });
