@@ -1,0 +1,238 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+  background-color: #0b0f19;
+  color: #f8fafc;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.navbar {
+  background-color: #000000;
+  border-bottom: 2px solid #dc2626;
+  padding: 1rem 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 4px 20px rgba(220, 38, 38, 0.2);
+}
+
+.logo {
+  font-size: 1.75rem;
+  font-weight: 800;
+  letter-spacing: 1px;
+  color: #ffffff;
+}
+
+.logo span {
+  color: #dc2626;
+}
+
+nav {
+  display: flex;
+  gap: 1rem;
+}
+
+.nav-btn {
+  background: transparent;
+  border: 1px solid transparent;
+  color: #94a3b8;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0.5rem 1.25rem;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  width: auto;
+}
+
+.nav-btn:hover {
+  color: #ffffff;
+  border-color: #dc2626;
+}
+
+.nav-btn.active {
+  background-color: #dc2626;
+  color: white;
+  border-color: #dc2626;
+  box-shadow: 0 0 10px rgba(220, 38, 38, 0.5);
+}
+
+.container {
+  max-width: 800px;
+  width: 92%;
+  margin: 2.5rem auto;
+  background: #121824;
+  border: 1px solid #1e293b;
+  padding: 2.5rem;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+.tab-content {
+  display: none;
+}
+
+.tab-content.active {
+  display: block;
+}
+
+h1 {
+  font-size: 2rem;
+  color: #ffffff;
+  margin-bottom: 0.5rem;
+  font-weight: 700;
+}
+
+.subtitle {
+  color: #94a3b8;
+  font-size: 1rem;
+  margin-bottom: 2rem;
+}
+
+.step-container {
+  margin-bottom: 1.25rem;
+  text-align: left;
+}
+
+label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+  color: #cbd5e1;
+  font-size: 0.95rem;
+}
+
+select {
+  width: 100%;
+  padding: 0.85rem;
+  border: 1px solid #334155;
+  border-radius: 6px;
+  font-size: 1rem;
+  outline: none;
+  background-color: #1e293b;
+  color: #ffffff;
+  transition: border-color 0.2s;
+}
+
+select:focus {
+  border-color: #dc2626;
+  box-shadow: 0 0 0 2px rgba(220, 38, 38, 0.2);
+}
+
+select:disabled {
+  background-color: #0f172a;
+  color: #64748b;
+  cursor: not-allowed;
+  border-color: #1e293b;
+}
+
+.disabled-section {
+  opacity: 0.4;
+  pointer-events: none;
+  transition: opacity 0.3s;
+}
+
+.disabled-section.enabled {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.preview-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 1rem;
+  margin: 1.5rem 0;
+}
+
+.preview-card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 8px;
+  padding: 0.75rem;
+  text-align: center;
+}
+
+.preview-card img {
+  width: 100%;
+  height: 80px;
+  object-fit: cover;
+  border-radius: 4px;
+  margin-bottom: 0.5rem;
+}
+
+.preview-card p {
+  color: #f8fafc;
+  font-weight: 600;
+  font-size: 0.85rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.preview-card span {
+  color: #94a3b8;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+}
+
+.alert-box {
+  margin: 1.5rem 0;
+  padding: 1rem;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  display: none;
+}
+
+.alert-box.error {
+  background-color: rgba(239, 68, 68, 0.15);
+  color: #f87171;
+  border: 1px solid #ef4444;
+  display: block;
+}
+
+.alert-box.success {
+  background-color: rgba(34, 197, 94, 0.15);
+  color: #4ade80;
+  border: 1px solid #22c55e;
+  display: block;
+}
+
+.btn-primary {
+  width: 100%;
+  background-color: #dc2626;
+  color: white;
+  border: none;
+  padding: 1rem;
+  font-size: 1rem;
+  font-weight: bold;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.2s, box-shadow 0.2s;
+}
+
+.btn-primary:hover {
+  background-color: #b91c1c;
+  box-shadow: 0 0 15px rgba(220, 38, 38, 0.4);
+}
+
+.btn-primary:disabled {
+  background-color: #334155;
+  color: #64748b;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+#mensaje {
+  margin-top: 1rem;
+  font-size: 0.95rem;
+  font-weight: bold;
+  text-align: center;
+}
